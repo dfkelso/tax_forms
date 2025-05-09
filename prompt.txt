@@ -1,0 +1,31 @@
+we are switching this app from rails to reflex (https://reflex.dev/docs/getting-started/introduction/) since i know python best.
+the current structure of the app is modeled after this github example of a website with nav bar and grid panel display 
+(gitrepo:https://github.com/reflex-dev/templates/tree/main/ci_template) 
+(site example:https://cijob.reflex.run/) and set up like this, currently:
+TAX_FORMS
+├── .states/
+├── .web/
+├── assets/
+    └── forms.json        # Sample forms data
+├── tax_forms/
+    ├── backend/
+    ├── components/
+    │   ├── __init__.py       # Empty init file
+    │   └── sidebar.py        # Sidebar component
+    ├── pages/
+    │   ├── __init__.py       # Empty init file
+    │   ├── home.py           # Home page (redirects to forms)
+    │   ├── forms_list.py     # Forms list page
+    │   └── testing.py        # Testing page
+    ├── state/
+    │   ├── __init__.py       # Empty init file
+    │   ├── forms.py          # Forms state
+    │   └── testing.py        # Testing 
+    ├── __init__.py           # Empty init file
+    ├── tax_forms.py          # Main application file
+    ├── templates.py          # Template decorator
+├── venv/
+├── .gitignore
+├── README.md 
+├── requirements.txt
+├── rxconfig.py
