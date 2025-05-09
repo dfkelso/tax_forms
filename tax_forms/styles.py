@@ -1,79 +1,37 @@
-
-"""Styles for the app."""
-
+# tax_forms/styles.py
 import reflex as rx
 
-border_radius = "var(--radius-2)"
-border = f"1px solid {rx.color('gray', 5)}"
-text_color = rx.color("gray", 11)
-gray_color = rx.color("gray", 11)
-gray_bg_color = rx.color("gray", 3)
-accent_text_color = rx.color("accent", 10)
-accent_color = rx.color("accent", 1)
-accent_bg_color = rx.color("accent", 3)
-hover_accent_color = {"_hover": {"color": accent_text_color}}
-hover_accent_bg = {"_hover": {"background_color": accent_color}}
-content_width_vw = "90vw"
-sidebar_width = "32em"
-sidebar_content_width = "16em"
-max_width = "1480px"
-color_box_size = ["2.25rem", "2.25rem", "2.5rem"]
+border_radius = "0.375rem"
+accent_color = "rgb(107, 99, 246)"
+accent_dark = "rgb(86, 77, 242)"
 
-
-template_page_style = {
-    "padding_top": ["1em", "1em", "2em"],
-    "padding_x": ["auto", "auto", "2em"],
-}
-
-template_content_style = {
-    "padding": "1em",
-    "margin_bottom": "2em",
-    "min_height": "90vh",
-}
-
-link_style = {
-    "color": accent_text_color,
-    "text_decoration": "none",
-    **hover_accent_color,
-}
-
-overlapping_button_style = {
+base_style = {
+    "font_family": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
     "background_color": "white",
-    "border_radius": border_radius,
-}
-
-markdown_style = {
-    "code": lambda text: rx.code(text, color_scheme="gray"),
-    "codeblock": lambda text, **props: rx.code_block(text, **props, margin_y="1em"),
-    "a": lambda text, **props: rx.link(
-        text,
-        **props,
-        font_weight="bold",
-        text_decoration="underline",
-        text_decoration_color=accent_text_color,
-    ),
-}
-
-box_shadow_style = "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)"
-
-color_picker_style = {
-    "border_radius": "max(var(--radius-3), var(--radius-full))",
-    "box_shadow": box_shadow_style,
-    "cursor": "pointer",
-    "display": "flex",
-    "align_items": "center",
-    "justify_content": "center",
-    "transition": "transform 0.15s ease-in-out",
-    "_active": {
-        "transform": "translateY(2px) scale(0.95)",
+    "color": "black",
+    rx.heading: {
+        "font_weight": "600",
+    },
+    rx.button: {
+        "border_radius": border_radius,
+        "_hover": {
+            "opacity": 0.8,
+        },
+    },
+    rx.link: {
+        "text_decoration": "none",
+        "_hover": {
+            "text_decoration": "underline",
+        },
+    },
+    rx.card: {
+        "border_radius": border_radius,
+        "padding": "1rem",
+        "shadow": "md",
+        "border": "1px solid rgb(230, 230, 230)",  # Using direct RGB instead of rx.color
     },
 }
 
-
 base_stylesheets = [
-    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    "https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap",
 ]
-
-base_style = {
-    "font_family": "Inter",
-}

@@ -1,10 +1,11 @@
+# tax_forms/components/sidebar.py
 import reflex as rx
 
 def sidebar():
     """Sidebar component for navigation."""
     return rx.box(
         rx.vstack(
-            rx.heading("Tax Forms", size="3"),  # Changed from "md" to "3"
+            rx.heading("Tax Forms", size="3"),  # Changed from "lg" to "3"
             rx.divider(mb=4),
             rx.link(
                 rx.hstack(

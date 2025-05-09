@@ -1,4 +1,3 @@
-import os
 import reflex as rx
 
 # Basic Reflex config

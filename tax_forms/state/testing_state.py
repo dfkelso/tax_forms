@@ -1,6 +1,9 @@
+# tax_forms/state/testing_state.py
 import reflex as rx
 from datetime import date, datetime
 from typing import List, Dict, Any, Optional
+from tax_forms.services.forms_repository import FormsRepository
+from tax_forms.services.due_date_calculator import DueDateCalculator
 
 class TestingState(rx.State):
     """State for testing due dates."""
@@ -14,37 +17,65 @@ class TestingState(rx.State):
     due_dates: List[Dict[str, Any]] = []
     
     def create_job(self):
-        """Create a test job."""
-        # In a real implementation, this would create a job in the database
-        # For now, we'll just set job_created to True and populate available_forms
+        """Create a test job for due date calculations."""
+        # Reset any previous data
         self.job_created = True
-        self.job_id = 1  # Simulated job ID
+        self.forms_added = False
+        self.job_id = 1  # Simple job ID for testing
+        self.due_dates = []
         
-        # Load available forms for the selected entity type
-        self.available_forms = [
-            {"id": 1, "form_number": "1040", "form_name": "U.S. Individual Income Tax Return", "entity_type": "individual", "locality_type": "federal", "locality": "United States"},
-            {"id": 2, "form_number": "1120", "form_name": "U.S. Corporation Income Tax Return", "entity_type": "corporation", "locality_type": "federal", "locality": "United States"},
-        ]
+        # Load forms that match the entity type
+        forms_repo = FormsRepository()
+        forms = forms_repo.get_all_forms()
         
         # Filter forms by entity type
-        self.available_forms = [form for form in self.available_forms if form["entity_type"] == self.entity_type]
+        self.available_forms = [
+            form for form in forms 
+            if form.get("entityType") == self.entity_type
+        ]
     
     def add_form_to_job(self, form_id: int):
-        """Add a form to the test job."""
-        # In a real implementation, this would add the form to the job in the database
-        # For now, we'll just set forms_added to True and populate due_dates
-        self.forms_added = True
+        """Add a form to the job and calculate its due dates."""
+        def add_form():
+            # Find the form by ID
+            forms_repo = FormsRepository()
+            form = forms_repo.find_form(form_id)
+            
+            if not form:
+                return
+            
+            # Parse dates
+            try:
+                start_date = date.fromisoformat(self.start_date)
+                end_date = date.fromisoformat(self.end_date)
+            except ValueError:
+                return
+            
+            # Calculate due dates
+            calculator = DueDateCalculator()
+            dates = calculator.calculate_dates(
+                form_number=form.get("formNumber"),
+                entity_type=form.get("entityType"),
+                locality_type=form.get("localityType"),
+                locality=form.get("locality"),
+                coverage_start_date=start_date,
+                coverage_end_date=end_date
+            )
+            
+            # If calculation successful, add to due dates
+            if dates:
+                self.forms_added = True
+                
+                due_date_str = dates.get("due_date").strftime("%Y-%m-%d") if dates.get("due_date") else "N/A"
+                ext_date_str = dates.get("extension_due_date").strftime("%Y-%m-%d") if dates.get("extension_due_date") else "N/A"
+                
+                self.due_dates.append({
+                    "id": len(self.due_dates) + 1,
+                    "formNumber": form.get("formNumber"),
+                    "formName": form.get("formName"),
+                    "due_date": due_date_str,
+                    "extension_due_date": ext_date_str,
+                    "approximated": dates.get("approximated", False)
+                })
         
-        # Find the form in available_forms
-        form = next((f for f in self.available_forms if f["id"] == form_id), None)
-        if not form:
-            return
-        
-        # Calculate due dates
-        # In a real implementation, this would use the DueDateCalculator
-        self.due_dates.append({
-            "form_number": form["form_number"],
-            "form_name": form["form_name"],
-            "due_date": "2025-04-15",
-            "extension_due_date": "2025-10-15"
-        })
+        return add_form
