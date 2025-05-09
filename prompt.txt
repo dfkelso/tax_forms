@@ -24,7 +24,7 @@ TAX_FORMS
     ├── __init__.py           # Empty init file
     ├── tax_forms.py          # Main application file
     ├── templates.py          # Template decorator
-├── venv/
+├── venv/  
 ├── .gitignore
 ├── README.md 
 ├── requirements.txt
