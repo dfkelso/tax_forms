@@ -2,74 +2,107 @@
 import os
 import json
 from typing import Dict, Any, Optional
-import anthropic
+import requests
 
 class ClaudeService:
-    """Service for interacting with Claude AI to generate tax rules."""
+    """Service for interacting with the Claude AI API."""
     
     def __init__(self, api_key: Optional[str] = None):
-        """Initialize the Claude service with an API key."""
-        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
-        
+        """Initialize the service with an API key."""
+        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not self.api_key:
-            print("Warning: ANTHROPIC_API_KEY not set. AI features will not work.")
+            print("Warning: No Claude API key provided. AI features will not work.")
     
     def generate_tax_rules(self, form_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Generate tax form rules using Claude AI."""
+        """Generate tax rules for a form using Claude AI."""
         if not self.api_key:
+            print("Error: No Claude API key provided.")
             return None
-            
+        
+        prompt = self._build_tax_rule_prompt(form_data)
+        
         try:
-            client = anthropic.Anthropic(api_key=self.api_key)
-            
-            # Create prompt for Claude
-            prompt = self._build_tax_rule_prompt(form_data)
-            
-            # Call Claude API
-            message = client.messages.create(
-                model="claude-3-opus-20240229",
-                max_tokens=4000,
-                temperature=0,
-                system="You are a tax expert who provides JSON responses containing tax form calculation rules.",
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            
-            # Parse the response
-            response_text = message.content[0].text
-            return self._parse_response(response_text)
-            
+            response = self._make_claude_request(prompt)
+            if response:
+                return self._parse_json_response(response)
+            return None
         except Exception as e:
-            print(f"Error calling Claude API: {e}")
+            print(f"Error generating tax rules: {e}")
+            return None
+    
+    def _make_claude_request(self, prompt: str) -> Optional[str]:
+        """Make a request to the Claude AI API."""
+        url = "https://api.anthropic.com/v1/messages"
+        headers = {
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+        }
+        
+        data = {
+            "model": "claude-3-haiku-20240307",
+            "max_tokens": 4000,
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
+        }
+        
+        try:
+            response = requests.post(url, headers=headers, json=data)
+            response.raise_for_status()
+            
+            response_data = response.json()
+            content = response_data.get("content", [])
+            
+            if content and len(content) > 0:
+                return content[0].get("text", "")
+            
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"API request error: {e}")
+            return None
+    
+    def _parse_json_response(self, response: str) -> Optional[Dict[str, Any]]:
+        """Parse a JSON response from Claude AI."""
+        try:
+            # Look for JSON content in the response
+            json_start = response.find("{")
+            json_end = response.rfind("}")
+            
+            if json_start >= 0 and json_end >= 0:
+                json_str = response[json_start:json_end + 1]
+                return json.loads(json_str)
+            
+            # Alternative: Try to find JSON inside code blocks
+            import re
+            json_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", response)
+            
+            if json_match:
+                json_str = json_match.group(1)
+                return json.loads(json_str)
+            
+            print("No JSON found in response")
+            return None
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
             return None
     
     def _build_tax_rule_prompt(self, form_data: Dict[str, Any]) -> str:
-        """Build the prompt for generating tax rules."""
-        current_year = 2025  # Fixed for now, could use datetime
-        seven_years_ago = current_year - 6
-
+        """Build a prompt for generating tax rules."""
         return f"""
-        You are a senior tax compliance specialist with expert knowledge of filing deadlines across all IRS forms, state tax forms, and local tax forms. 
-
-        I need you to research and determine the exact due dates and extension due dates for the following tax form for each year from {seven_years_ago} through {current_year}:
-
-        Form Number: {form_data.get('form_number')}
-        Form Name: {form_data.get('form_name')}
-        Entity Type: {form_data.get('entity_type')}
-        Locality Type: {form_data.get('locality_type')}
-        Locality: {form_data.get('locality')}
-
-        RESEARCH GUIDELINES:
-        1. Use multiple official sources to verify deadlines. Primary sources like IRS.gov, state tax department websites, and official tax calendars are most reliable.
-        2. For each year, determine both the standard filing deadline and the maximum extension deadline.
-        3. Pay special attention to any COVID-19 related changes in 2020-2021, as many tax deadlines were extended.
-        4. Account for any changes to standard filing deadlines that occurred over the past 7 years.
-        5. Consider any special rules that apply to the specific entity type ({form_data.get('entity_type')}).
-        6. For fiscal year entities, note any different rules that apply to different fiscal year ends.
-        7. Account for weekend/holiday adjustments in your base calculations.
-        8. For foreign entity forms, take into account any special international filing rules.
-
+        You are a senior tax compliance specialist with expert knowledge of filing deadlines.
+        
+        I need you to research and determine the exact due dates and extension due dates for the following tax form:
+        
+        Form Number: {form_data.get('form_number', '')}
+        Form Name: {form_data.get('form_name', '')}
+        Entity Type: {form_data.get('entity_type', '')}
+        Locality Type: {form_data.get('locality_type', '')}
+        Locality: {form_data.get('locality', '')}
+        
+        Provide the tax filing deadlines for the last 7 years. For each year, determine both the standard filing deadline 
+        and the maximum extension deadline.
+        
         FORMAT YOUR RESPONSE AS VALID JSON:
         ```json
         {{
@@ -86,7 +119,7 @@ class ClaudeService:
               }}
             }},
             {{
-              "effectiveYears": [2019, 2021, 2022, 2023, 2024, 2025],
+              "effectiveYears": [2019, 2021, 2022, 2023, 2024],
               "dueDate": {{
                 "monthsAfterCalculationBase": 5,
                 "dayOfMonth": 15
@@ -99,70 +132,11 @@ class ClaudeService:
           ]
         }}
         ```
-
-        GROUPING RULES:
-        - Group years that have identical filing requirements together.
-        - Years with different requirements (like 2020 COVID extensions) should be in separate rule objects.
-        - If certain fiscal year endings have different rules (common for corporate returns), use fiscalYearExceptions like:
-        ```
-        "fiscalYearExceptions": {{
-          "06": {{  // For June fiscal year end
-            "monthsAfterCalculationBase": 4,
-            "dayOfMonth": 15
-          }}
-        }}
-        ```
-
-        CALCULATION BASES:
-        - Most tax due dates are calculated as "monthsAfterCalculationBase" 
-        - If you discover that dates should be calculated from the beginning of the year, use "monthsAfterYearStart" instead
-
-        RULES FOR DETERMINING CALCULATIONS:
-        - Use standard tax calculation practices - typically X months after the end of the tax year
-        - If a form uses a different calculation approach, implement it according to official guidance
-        - Always include the day of the month when the form is due
-        - For forms with unusual timing requirements, ensure the calculation method accurately reflects official deadlines
-
-        Provide ONLY the JSON result with no additional explanation. The JSON must be valid, properly formatted, and contain accurate tax filing information based on thorough research.
+        
+        Group years that have identical filing requirements together. Years with different requirements should be 
+        in separate rule objects.
+        
+        If certain fiscal year endings have different rules (common for corporate returns), use fiscalYearExceptions.
+        
+        Provide ONLY the JSON result with no additional explanation.
         """
-    
-    def _parse_response(self, response_text: str) -> Optional[Dict[str, Any]]:
-        """Parse the response from Claude to extract the JSON data."""
-        try:
-            # Extract JSON from the response
-            json_text = ""
-            
-            # Look for JSON block
-            if "```json" in response_text:
-                # Extract text between ```json and ```
-                start_marker = "```json"
-                end_marker = "```"
-                start_index = response_text.find(start_marker) + len(start_marker)
-                end_index = response_text.find(end_marker, start_index)
-                if end_index > start_index:
-                    json_text = response_text[start_index:end_index].strip()
-            elif "```" in response_text:
-                # Try generic code block
-                start_marker = "```"
-                end_marker = "```"
-                start_index = response_text.find(start_marker) + len(start_marker)
-                end_index = response_text.find(end_marker, start_index)
-                if end_index > start_index:
-                    json_text = response_text[start_index:end_index].strip()
-            else:
-                # Try to find JSON object directly
-                start_index = response_text.find("{")
-                end_index = response_text.rfind("}") + 1
-                if start_index >= 0 and end_index > start_index:
-                    json_text = response_text[start_index:end_index].strip()
-            
-            if json_text:
-                return json.loads(json_text)
-            return None
-            
-        except json.JSONDecodeError as e:
-            print(f"Error parsing Claude response: {e}")
-            return None
-        except Exception as e:
-            print(f"Unexpected error processing Claude response: {e}")
-            return None

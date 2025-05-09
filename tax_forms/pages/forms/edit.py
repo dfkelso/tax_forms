@@ -3,280 +3,225 @@ import reflex as rx
 from tax_forms.state.form_editor_state import FormEditorState
 from tax_forms.templates import template
 
-@template(route="/forms/edit/{form_id}", title="Edit Form")
-def edit():
-    """Edit an existing form."""
-    return form_editor()
-
-@template(route="/forms/new", title="New Form")
-def new():
-    """Create a new form."""
-    return form_editor(is_new=True)
-
-def form_editor(is_new=False):
-    """Form editor component."""
-    return rx.container(
-        rx.vstack(
-            rx.heading(
-                "New Tax Form" if is_new else "Edit Tax Form", 
-                size="3",
+@template(route="/forms/:form_id/edit", title="Edit Form")
+def form_edit():
+    form_id = rx.State.router.page.params.form_id
+    
+    return rx.vstack(
+        rx.heading(f"Edit Form: {FormEditorState.form_data.form_number}", size="lg"),
+        rx.tabs(
+            rx.tab_list(
+                rx.tab("Basic Info"),
+                rx.tab("Calculation Rules"),
+                rx.tab("AI Assistant"),
             ),
-            
-            # Basic form information card
-            rx.card(
-                rx.vstack(
-                    rx.hstack(
+            rx.tab_panels(
+                rx.tab_panel(
+                    # Basic form info panel
+                    rx.form(
                         rx.vstack(
-                            rx.text("Form Number", as_="strong"),
-                            rx.input(
-                                placeholder="e.g. 1040",
-                                value=FormEditorState.form_number,
-                                on_change=FormEditorState.set_form_number,
-                                width="100%",
-                            ),
-                            width="100%",
-                        ),
-                        rx.vstack(
-                            rx.text("Form Name", as_="strong"),
-                            rx.input(
-                                placeholder="e.g. U.S. Individual Income Tax Return",
-                                value=FormEditorState.form_name,
-                                on_change=FormEditorState.set_form_name,
-                                width="100%",
-                            ),
-                            width="100%",
-                        ),
-                        spacing="4",
-                        width="100%",
-                    ),
-                    
-                    rx.hstack(
-                        rx.vstack(
-                            rx.text("Entity Type", as_="strong"),
-                            rx.select(
-                                ["individual", "corporation", "partnership", "scorp", "smllc"],
-                                placeholder="Select entity type",
-                                value=FormEditorState.entity_type,
-                                on_change=FormEditorState.set_entity_type,
-                                width="100%",
-                            ),
-                            width="100%",
-                        ),
-                        rx.vstack(
-                            rx.text("Locality Type", as_="strong"),
-                            rx.select(
-                                ["federal", "state", "city"],
-                                placeholder="Select locality type",
-                                value=FormEditorState.locality_type,
-                                on_change=FormEditorState.set_locality_type,
-                                width="100%",
-                            ),
-                            width="100%",
-                        ),
-                        rx.vstack(
-                            rx.text("Locality", as_="strong"),
-                            rx.input(
-                                placeholder="e.g. United States, California",
-                                value=FormEditorState.locality,
-                                on_change=FormEditorState.set_locality,
-                                width="100%",
-                            ),
-                            width="100%",
-                        ),
-                        spacing="4",
-                        width="100%",
-                    ),
-                    
-                    rx.hstack(
-                        rx.vstack(
-                            rx.text("Parent Relationship", as_="strong"),
-                            rx.checkbox(
-                                "This is a parent form",
-                                value=FormEditorState.is_parent,
-                                on_change=FormEditorState.set_is_parent,
-                            ),
-                            rx.cond(
-                                ~FormEditorState.is_parent,
-                                rx.input(
-                                    placeholder="Parent form number",
-                                    value=FormEditorState.parent_form_number,
-                                    on_change=FormEditorState.set_parent_form_number,
-                                    width="100%",
+                            rx.hstack(
+                                rx.form_control(
+                                    rx.form_label("Form Number"),
+                                    rx.input(
+                                        value=FormEditorState.form_data.form_number,
+                                        on_change=FormEditorState.set_form_number,
+                                    ),
+                                    is_required=True,
                                 ),
-                            ),
-                            width="100%",
-                        ),
-                        rx.vstack(
-                            rx.text("Owner", as_="strong"),
-                            rx.input(
-                                value=FormEditorState.owner,
-                                on_change=FormEditorState.set_owner,
+                                rx.form_control(
+                                    rx.form_label("Form Name"),
+                                    rx.input(
+                                        value=FormEditorState.form_data.form_name,
+                                        on_change=FormEditorState.set_form_name,
+                                    ),
+                                    is_required=True,
+                                ),
                                 width="100%",
                             ),
-                            width="100%",
-                        ),
-                        rx.vstack(
-                            rx.text("Calculation Base", as_="strong"),
-                            rx.select(
-                                ["end", "start"],
-                                placeholder="Select calculation base",
-                                value=FormEditorState.calculation_base,
-                                on_change=FormEditorState.set_calculation_base,
+                            rx.hstack(
+                                rx.form_control(
+                                    rx.form_label("Entity Type"),
+                                    rx.select(
+                                        ["individual", "corporation", "partnership", "scorp", "smllc"],
+                                        value=FormEditorState.form_data.entity_type,
+                                        on_change=FormEditorState.set_entity_type,
+                                    ),
+                                ),
+                                rx.form_control(
+                                    rx.form_label("Locality Type"),
+                                    rx.select(
+                                        ["federal", "state", "city"],
+                                        value=FormEditorState.form_data.locality_type,
+                                        on_change=FormEditorState.set_locality_type,
+                                    ),
+                                ),
+                                rx.form_control(
+                                    rx.form_label("Locality"),
+                                    rx.input(
+                                        value=FormEditorState.form_data.locality,
+                                        on_change=FormEditorState.set_locality,
+                                    ),
+                                ),
                                 width="100%",
                             ),
+                            rx.hstack(
+                                rx.form_control(
+                                    rx.form_label("Parent Form"),
+                                    rx.input(
+                                        value=FormEditorState.form_data.parent_form_numbers,
+                                        on_change=FormEditorState.set_parent_form_numbers,
+                                    ),
+                                ),
+                                rx.form_control(
+                                    rx.form_label("Owner"),
+                                    rx.input(
+                                        value=FormEditorState.form_data.owner,
+                                        on_change=FormEditorState.set_owner,
+                                    ),
+                                ),
+                                width="100%",
+                            ),
+                            rx.button("Save", on_click=FormEditorState.save_form),
                             width="100%",
+                            spacing="4",
                         ),
-                        spacing="4",
-                        width="100%",
+                        on_submit=FormEditorState.save_form,
                     ),
-                    
-                    # Extension information
-                    rx.divider(),
-                    rx.heading("Extension Information", size="4"),
-                    
-                    rx.hstack(
-                        rx.vstack(
-                            rx.text("Extension Form Number", as_="strong"),
-                            rx.input(
-                                placeholder="e.g. 4868",
-                                value=FormEditorState.extension_form_number,
-                                on_change=FormEditorState.set_extension_form_number,
-                                width="100%",
-                            ),
-                            width="100%",
-                        ),
-                        rx.vstack(
-                            rx.text("Extension Form Name", as_="strong"),
-                            rx.input(
-                                placeholder="e.g. Application for Automatic Extension",
-                                value=FormEditorState.extension_form_name,
-                                on_change=FormEditorState.set_extension_form_name,
-                                width="100%",
-                            ),
-                            width="100%",
-                        ),
-                        rx.vstack(
-                            rx.text("Piggyback Fed", as_="strong"),
-                            rx.checkbox(
-                                "Accepts federal extension",
-                                value=FormEditorState.piggyback_fed,
-                                on_change=FormEditorState.set_piggyback_fed,
-                            ),
-                            width="100%",
-                        ),
-                        spacing="4",
-                        width="100%",
-                    ),
-                    
-                    width="100%",
-                    spacing="4",
                 ),
-                width="100%",
-            ),
-            
-            # Calculation Rules
-            rx.card(
-                rx.vstack(
-                    rx.hstack(
-                        rx.heading("Calculation Rules", size="4"),
-                        rx.spacer(),
+                rx.tab_panel(
+                    # Calculation rules panel
+                    rx.vstack(
+                        rx.heading("Calculation Rules", size="md"),
                         rx.button(
-                            "Generate with AI",
-                            on_click=FormEditorState.generate_rules_with_ai,
-                            color_scheme="teal",
+                            "Add Rule", 
+                            on_click=FormEditorState.add_empty_rule
                         ),
-                        width="100%",
-                    ),
-                    
-                    # Rules Table
-                    rx.cond(
-                        FormEditorState.calculation_rules,
-                        rx.vstack(
-                            rx.foreach(
-                                FormEditorState.calculation_rules,
-                                lambda rule, i: rx.card(
-                                    rx.vstack(
-                                        rx.hstack(
-                                            rx.text(f"Years: {', '.join(map(str, rule['effectiveYears']))}", as_="strong"),
-                                            rx.spacer(),
-                                            rx.button(
-                                                "Delete",
-                                                on_click=lambda: FormEditorState.delete_rule(i),
-                                                color_scheme="red",
-                                                size="sm",
-                                            ),
-                                            width="100%",
-                                        ),
-                                        rx.text(f"Due Date: {rule['dueDate']['monthsAfterCalculationBase']} months after year end, day {rule['dueDate']['dayOfMonth']}"),
-                                        rx.text(f"Extension Due Date: {rule['extensionDueDate']['monthsAfterCalculationBase']} months after year end, day {rule['extensionDueDate']['dayOfMonth']}"),
-                                        rx.cond(
-                                            "fiscalYearExceptions" in rule["dueDate"],
-                                            rx.card(
-                                                rx.vstack(
-                                                    rx.text("Fiscal Year Exceptions:", as_="strong"),
-                                                    rx.foreach(
-                                                        rule["dueDate"]["fiscalYearExceptions"].items(),
-                                                        lambda exception: rx.text(f"Month {exception[0]}: {exception[1]['monthsAfterCalculationBase']} months after year end, day {exception[1]['dayOfMonth']}"),
-                                                    ),
-                                                    spacing="1",
-                                                ),
-                                                padding="2",
-                                                background_color="gray.50",
-                                            ),
+                        rx.foreach(
+                            FormEditorState.calculation_rules,
+                            lambda rule, i: rx.box(
+                                rx.vstack(
+                                    rx.hstack(
+                                        rx.heading(f"Rule #{i+1}", size="sm"),
+                                        rx.spacer(),
+                                        rx.button(
+                                            "Delete", 
+                                            on_click=FormEditorState.delete_rule(i),
+                                            size="sm",
+                                            color_scheme="red",
                                         ),
                                         width="100%",
-                                        spacing="2",
                                     ),
-                                    padding="3",
+                                    rx.form_control(
+                                        rx.form_label("Effective Years (comma separated)"),
+                                        rx.input(
+                                            value=",".join(map(str, rule.effective_years)),
+                                            on_change=lambda val: FormEditorState.update_rule_years(i, val),
+                                        ),
+                                    ),
+                                    rx.heading("Due Date", size="xs"),
+                                    rx.hstack(
+                                        rx.form_control(
+                                            rx.form_label("Months After Year End"),
+                                            rx.number_input(
+                                                value=rule.due_date.months_after_year_end,
+                                                on_change=lambda val: FormEditorState.update_rule_due_date_months(i, val),
+                                                min=0,
+                                                max=24,
+                                            ),
+                                        ),
+                                        rx.form_control(
+                                            rx.form_label("Day of Month"),
+                                            rx.number_input(
+                                                value=rule.due_date.day_of_month,
+                                                on_change=lambda val: FormEditorState.update_rule_due_date_day(i, val),
+                                                min=1,
+                                                max=31,
+                                            ),
+                                        ),
+                                    ),
+                                    rx.heading("Extension Due Date", size="xs"),
+                                    rx.hstack(
+                                        rx.form_control(
+                                            rx.form_label("Months After Year End"),
+                                            rx.number_input(
+                                                value=rule.extension_due_date.months_after_year_end,
+                                                on_change=lambda val: FormEditorState.update_rule_extension_months(i, val),
+                                                min=0,
+                                                max=24,
+                                            ),
+                                        ),
+                                        rx.form_control(
+                                            rx.form_label("Day of Month"),
+                                            rx.number_input(
+                                                value=rule.extension_due_date.day_of_month,
+                                                on_change=lambda val: FormEditorState.update_rule_extension_day(i, val),
+                                                min=1,
+                                                max=31,
+                                            ),
+                                        ),
+                                    ),
+                                    width="100%",
+                                    spacing="4",
+                                    padding="4",
+                                    border="1px solid",
+                                    border_color="gray.200",
+                                    border_radius="md",
+                                    mb="4",
+                                ),
+                            )
+                        ),
+                        rx.button("Save All Rules", on_click=FormEditorState.save_rules),
+                        width="100%",
+                        spacing="4",
+                    ),
+                ),
+                rx.tab_panel(
+                    # AI Assistant panel
+                    rx.vstack(
+                        rx.heading("AI Due Date Assistant", size="md"),
+                        rx.text(
+                            "Let our AI assistant generate calculation rules for this form by researching past 7 years of due dates."
+                        ),
+                        rx.button(
+                            "Generate Calculation Rules", 
+                            on_click=FormEditorState.generate_ai_rules,
+                            size="lg",
+                            color_scheme="blue",
+                        ),
+                        rx.cond(
+                            FormEditorState.ai_loading,
+                            rx.center(
+                                rx.spinner(size="xl"),
+                                rx.text("Generating rules..."),
+                            ),
+                        ),
+                        rx.cond(
+                            FormEditorState.ai_results != "",
+                            rx.vstack(
+                                rx.heading("Generated Rules", size="md"),
+                                rx.code_block(
+                                    FormEditorState.ai_results,
+                                    language="json",
+                                ),
+                                rx.button(
+                                    "Apply Rules", 
+                                    on_click=FormEditorState.apply_ai_rules,
                                 ),
                             ),
-                            rx.button(
-                                "Add Rule",
-                                on_click=FormEditorState.add_rule,
-                                color_scheme="blue",
-                                variant="outline",
-                            ),
-                            width="100%",
-                            spacing="3",
                         ),
-                        rx.vstack(
-                            rx.text("No calculation rules added yet."),
-                            rx.button(
-                                "Add Rule",
-                                on_click=FormEditorState.add_rule,
-                                color_scheme="blue",
-                                variant="outline",
-                            ),
-                            spacing="3",
-                        ),
+                        width="100%",
+                        spacing="4",
+                        padding="4",
+                        border="1px solid",
+                        border_color="blue.100",
+                        border_radius="md",
+                        background="blue.50",
                     ),
-                    
-                    width="100%",
-                    spacing="4",
                 ),
-                width="100%",
             ),
-            
-            # Save buttons
-            rx.hstack(
-                rx.button(
-                    "Save Form",
-                    on_click=FormEditorState.save_form,
-                    color_scheme="green",
-                ),
-                rx.button(
-                    "Cancel",
-                    on_click=rx.redirect("/forms"),
-                    color_scheme="gray",
-                ),
-                spacing="4",
-                mt="4",
-            ),
-            
             width="100%",
-            spacing="4",
-            align_items="stretch",
         ),
         width="100%",
-        padding="0",
+        spacing="6",
     )

@@ -1,5 +1,5 @@
 # main.py
-import reflex as rx
 from tax_forms.tax_forms import app
 
-app.compile()
+if __name__ == "__main__":
+    app.run()

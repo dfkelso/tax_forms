@@ -5,11 +5,11 @@ def sidebar():
     """Sidebar component for navigation."""
     return rx.box(
         rx.vstack(
-            rx.heading("Tax Forms", size="3"),  # Changed from "lg" to "3"
+            rx.heading("Tax Forms", size="lg"),
             rx.divider(mb=4),
             rx.link(
                 rx.hstack(
-                    rx.icon("file-text"),
+                    rx.icon("file"),
                     rx.text("Forms"),
                     spacing="3",
                 ),
@@ -23,7 +23,7 @@ def sidebar():
             ),
             rx.link(
                 rx.hstack(
-                    rx.icon("check-circle"),
+                    rx.icon("check"),
                     rx.text("Testing"),
                     spacing="3",
                 ),
