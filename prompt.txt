@@ -1,31 +1,9 @@
-we are switching this app from rails to reflex (https://reflex.dev/docs/getting-started/introduction/) since i know python best.
+we are switching our original app (repo=dfkelso/tax-date-calculator) from rails to reflex (https://reflex.dev/docs/getting-started/introduction/) since i know python best (repo=dfkelso/tax_forms).
 the current structure of the app is modeled after this github example of a website with nav bar and grid panel display 
 (gitrepo:https://github.com/reflex-dev/templates/tree/main/ci_template) 
-(site example:https://cijob.reflex.run/) and set up like this, currently:
-TAX_FORMS
-├── .states/
-├── .web/
-├── assets/
-    └── forms.json        # Sample forms data
-├── tax_forms/
-    ├── backend/
-    ├── components/
-    │   ├── __init__.py       # Empty init file
-    │   └── sidebar.py        # Sidebar component
-    ├── pages/
-    │   ├── __init__.py       # Empty init file
-    │   ├── home.py           # Home page (redirects to forms)
-    │   ├── forms_list.py     # Forms list page
-    │   └── testing.py        # Testing page
-    ├── state/
-    │   ├── __init__.py       # Empty init file
-    │   ├── forms.py          # Forms state
-    │   └── testing.py        # Testing 
-    ├── __init__.py           # Empty init file
-    ├── tax_forms.py          # Main application file
-    ├── templates.py          # Template decorator
-├── venv/  
-├── .gitignore
-├── README.md 
-├── requirements.txt
-├── rxconfig.py
+(site example:https://cijob.reflex.run/) and set up like this, currently.
+we got caught in the middle of updating the app by transitioning our inital stab to be structured more like the ci_template
+and troubleshooting the errors we were having deploying it. MAJOR NOTE: as a departure from the original rails app, i want to have the form json editor and ai capabilities as the main feature as "forms" and the testing will be the ability to add forms to test jobs to confirm due date calculations are correct.
+
+please take several minutes and familiarize yourself with all of the code bases. Again, we are transitioning the code structure to be more like the ci_template.. so i need to know what to do with the Models, Services & State folders (f we need to keep them, thats ok.. i just need to have a clear structure on how to add all of the componentry for the app that we are building and i want it clean)
+
