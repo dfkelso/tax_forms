@@ -2,7 +2,7 @@
 
 import reflex as rx
 
-from reflex_app import styles
+from tax_forms import styles
 
 
 def menu_item_icon(icon: str) -> rx.Component:
@@ -104,31 +104,6 @@ def navbar_footer() -> rx.Component:
 
 
 def menu_button() -> rx.Component:
-    from reflex.page import DECORATED_PAGES
-
-    ordered_page_routes = [
-        "/table",
-        "/",
-        "/about",
-        "/profile",
-        "/settings",
-    ]
-
-    pages = [
-        page_dict
-        for page_list in DECORATED_PAGES.values()
-        for _, page_dict in page_list
-    ]
-
-    ordered_pages = sorted(
-        pages,
-        key=lambda page: (
-            ordered_page_routes.index(page["route"])
-            if page["route"] in ordered_page_routes
-            else len(ordered_page_routes)
-        ),
-    )
-
     return rx.drawer.root(
         rx.drawer.trigger(
             rx.icon("align-justify"),
@@ -144,15 +119,10 @@ def menu_button() -> rx.Component:
                         width="100%",
                     ),
                     rx.divider(),
-                    *[
-                        menu_item(
-                            text=page.get(
-                                "title", page["route"].strip("/").capitalize()
-                            ),
-                            url=page["route"],
-                        )
-                        for page in ordered_pages
-                    ],
+                    # Simplified navigation for mobile
+                    menu_item("Forms", "/forms"),
+                    menu_item("Testing", "/testing"),
+                    menu_item("Settings", "/settings"),
                     rx.spacer(),
                     navbar_footer(),
                     spacing="4",

@@ -1,7 +1,7 @@
+# reflex_app/views/table.py
 import reflex as rx
 
-from ..backend.table_state import Item, TableState
-from ..components.status_badge import status_badge
+from ..backend.table_state import TaxForm, TableState
 
 
 def _header_cell(text: str, icon: str) -> rx.Component:
@@ -15,7 +15,7 @@ def _header_cell(text: str, icon: str) -> rx.Component:
     )
 
 
-def _show_item(item: Item, index: int) -> rx.Component:
+def _show_item(item: TaxForm, index: int) -> rx.Component:
     bg_color = rx.cond(
         index % 2 == 0,
         rx.color("gray", 1),
@@ -27,10 +27,17 @@ def _show_item(item: Item, index: int) -> rx.Component:
         rx.color("accent", 3),
     )
     return rx.table.row(
-        rx.table.row_header_cell(item.name),
-        rx.table.cell(f"${item.payment}"),
-        rx.table.cell(item.date),
-        rx.table.cell(status_badge(item.status)),
+        rx.table.row_header_cell(item.form_number),
+        rx.table.cell(item.form_name),
+        rx.table.cell(item.entity_type),
+        rx.table.cell(f"{item.locality_type} - {item.locality}"),
+        rx.table.cell(
+            rx.hstack(
+                rx.button("Edit", on_click=rx.navigate(f"/forms/{item.id}/edit"), size="1"),
+                rx.button("Delete", size="1", color_scheme="red"),
+                spacing="2",
+            )
+        ),
         style={"_hover": {"bg": hover_color}, "bg": bg_color},
         align="center",
     )
@@ -124,12 +131,13 @@ def main_table() -> rx.Component:
                 ),
                 rx.select(
                     [
-                        "name",
-                        "payment",
-                        "date",
-                        "status",
+                        "form_number",
+                        "form_name",
+                        "entity_type",
+                        "locality_type",
+                        "locality",
                     ],
-                    placeholder="Sort By: Name",
+                    placeholder="Sort By: Form Number",
                     size="3",
                     on_change=TableState.set_sort_value,
                 ),
@@ -143,7 +151,7 @@ def main_table() -> rx.Component:
                         display=rx.cond(TableState.search_value, "flex", "none"),
                     ),
                     value=TableState.search_value,
-                    placeholder="Search here...",
+                    placeholder="Search forms...",
                     size="3",
                     max_width=["150px", "150px", "200px", "250px"],
                     width="100%",
@@ -156,12 +164,12 @@ def main_table() -> rx.Component:
                 spacing="3",
             ),
             rx.button(
-                rx.icon("arrow-down-to-line", size=20),
-                "Export",
+                rx.icon("plus", size=20),
+                "Add Form",
                 size="3",
                 variant="surface",
                 display=["none", "none", "none", "flex"],
-                on_click=rx.download(url="/items.csv"),
+                on_click=rx.navigate("/forms/new"),
             ),
             spacing="3",
             justify="between",
@@ -172,10 +180,11 @@ def main_table() -> rx.Component:
         rx.table.root(
             rx.table.header(
                 rx.table.row(
-                    _header_cell("Name", "user"),
-                    _header_cell("Payment", "dollar-sign"),
-                    _header_cell("Date", "calendar"),
-                    _header_cell("Status", "notebook-pen"),
+                    _header_cell("Form Number", "file-text"),
+                    _header_cell("Form Name", "text"),
+                    _header_cell("Entity Type", "users"),
+                    _header_cell("Locality", "map-pin"),
+                    _header_cell("Actions", "settings"),
                 ),
             ),
             rx.table.body(

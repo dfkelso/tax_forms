@@ -1,6 +1,6 @@
 import reflex as rx
 
-from reflex_app import styles
+from tax_forms import styles
 
 
 def card(*children, **props):

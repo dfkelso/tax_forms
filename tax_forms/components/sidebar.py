@@ -5,56 +5,6 @@ import reflex as rx
 from .. import styles
 
 
-def sidebar_header() -> rx.Component:
-    """Sidebar header.
-
-    Returns:
-        The sidebar header component.
-
-    """
-    return rx.hstack(
-        # The logo.
-        rx.color_mode_cond(
-            rx.image(src="/reflex_black.svg", height="1.5em"),
-            rx.image(src="/reflex_white.svg", height="1.5em"),
-        ),
-        rx.spacer(),
-        align="center",
-        width="100%",
-        padding="0.35em",
-        margin_bottom="1em",
-    )
-
-
-def sidebar_footer() -> rx.Component:
-    """Sidebar footer.
-
-    Returns:
-        The sidebar footer component.
-
-    """
-    return rx.hstack(
-        rx.link(
-            rx.text("Docs", size="3"),
-            href="https://reflex.dev/docs/getting-started/introduction/",
-            color_scheme="gray",
-            underline="none",
-        ),
-        rx.link(
-            rx.text("Blog", size="3"),
-            href="https://reflex.dev/blog/",
-            color_scheme="gray",
-            underline="none",
-        ),
-        rx.spacer(),
-        rx.color_mode.button(style={"opacity": "0.8", "scale": "0.95"}),
-        justify="start",
-        align="center",
-        width="100%",
-        padding="0.35em",
-    )
-
-
 def sidebar_item_icon(icon: str) -> rx.Component:
     return rx.icon(icon, size=18)
 
@@ -80,9 +30,7 @@ def sidebar_item(text: str, url: str) -> rx.Component:
             rx.match(
                 text,
                 ("Forms", sidebar_item_icon("table-2")),
-                ("About", sidebar_item_icon("book-open")),
-                ("Overview", sidebar_item_icon("home")),
-                ("Profile", sidebar_item_icon("user")),
+                ("Testing", sidebar_item_icon("check-circle")),
                 ("Settings", sidebar_item_icon("settings")),
                 sidebar_item_icon("layout-dashboard"),
             ),
@@ -124,48 +72,55 @@ def sidebar_item(text: str, url: str) -> rx.Component:
     )
 
 
+def sidebar_header() -> rx.Component:
+    """Sidebar header.
+
+    Returns:
+        The sidebar header component.
+
+    """
+    return rx.hstack(
+        # The logo.
+        rx.heading("Tax Calculator", size="4"),
+        rx.spacer(),
+        align="center",
+        width="100%",
+        padding="0.35em",
+        margin_bottom="1em",
+    )
+
+
+def sidebar_footer() -> rx.Component:
+    """Sidebar footer.
+
+    Returns:
+        The sidebar footer component.
+
+    """
+    return rx.hstack(
+        rx.spacer(),
+        rx.color_mode.button(style={"opacity": "0.8", "scale": "0.95"}),
+        justify="end",
+        align="center",
+        width="100%",
+        padding="0.35em",
+    )
+
+
 def sidebar() -> rx.Component:
     """The sidebar.
 
     Returns:
         The sidebar component.
     """
-    from reflex.page import DECORATED_PAGES
-
-    ordered_page_routes = [
-        "/table",
-        "/",
-        "/about",
-        "/profile",
-        "/settings",
-    ]
-
-    pages = [
-        page_dict
-        for page_list in DECORATED_PAGES.values()
-        for _, page_dict in page_list
-    ]
-
-    ordered_pages = sorted(
-        pages,
-        key=lambda page: (
-            ordered_page_routes.index(page["route"])
-            if page["route"] in ordered_page_routes
-            else len(ordered_page_routes)
-        ),
-    )
-
     return rx.flex(
         rx.vstack(
             sidebar_header(),
             rx.vstack(
-                *[
-                    sidebar_item(
-                        text=page.get("title", page["route"].strip("/").capitalize()),
-                        url=page["route"],
-                    )
-                    for page in ordered_pages
-                ],
+                # Simplified navigation with just Forms, Testing, Settings
+                sidebar_item("Forms", "/forms"),
+                sidebar_item("Testing", "/testing"),
+                sidebar_item("Settings", "/settings"),
                 spacing="1",
                 width="100%",
             ),
