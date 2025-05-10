@@ -13,49 +13,7 @@ def form_field(label: str, field_component: rx.Component) -> rx.Component:
     )
 
 
-def _make_delete_handler(index: int):
-    """Create a delete handler for a specific index."""
-    def handler():
-        return FormEditState.delete_rule(index)
-    return handler
-
-
-def _make_years_handler(index: int):
-    """Create a years update handler for a specific index."""
-    def handler(value: str):
-        return FormEditState.update_rule_years(index, value)
-    return handler
-
-
-def _make_due_months_handler(index: int):
-    """Create a due months update handler for a specific index."""
-    def handler(value: str):
-        return FormEditState.update_due_months(index, int(value) if value else 0)
-    return handler
-
-
-def _make_due_day_handler(index: int):
-    """Create a due day update handler for a specific index."""
-    def handler(value: str):
-        return FormEditState.update_due_day(index, int(value) if value else 15)
-    return handler
-
-
-def _make_extension_months_handler(index: int):
-    """Create an extension months update handler for a specific index."""
-    def handler(value: str):
-        return FormEditState.update_extension_months(index, int(value) if value else 0)
-    return handler
-
-
-def _make_extension_day_handler(index: int):
-    """Create an extension day update handler for a specific index."""
-    def handler(value: str):
-        return FormEditState.update_extension_day(index, int(value) if value else 15)
-    return handler
-
-
-
+def calculation_rule_item(rule: dict, index: int) -> rx.Component:
     """Single calculation rule component."""
     return rx.card(
         rx.vstack(
@@ -66,7 +24,7 @@ def _make_extension_day_handler(index: int):
                     rx.icon("trash-2", size=16),
                     color_scheme="red",
                     size="1",
-                    on_click=_make_delete_handler(index),
+                    on_click=FormEditState.delete_rule(index),
                 ),
                 width="100%",
             ),
@@ -74,8 +32,8 @@ def _make_extension_day_handler(index: int):
             form_field(
                 "Effective Years (comma separated)",
                 rx.input(
-                    value=",".join(map(str, rule.effective_years)),
-                    on_change=_make_years_handler(index),
+                    value=FormEditState.get_effective_years_string(index),
+                    on_change=lambda val: FormEditState.update_rule_years(index, val),
                     placeholder="e.g. 2023, 2024, 2025",
                 ),
             ),
@@ -86,8 +44,8 @@ def _make_extension_day_handler(index: int):
                     "Months After Year End",
                     rx.input(
                         type="number",
-                        value=str(rule.due_date.get("monthsAfterCalculationBase", 0)),
-                        on_change=_make_due_months_handler(index),
+                        value=FormEditState.get_due_months(index),
+                        on_change=lambda val: FormEditState.update_due_months(index, val),
                         min=0,
                         max=24,
                     ),
@@ -96,8 +54,8 @@ def _make_extension_day_handler(index: int):
                     "Day of Month",
                     rx.input(
                         type="number",
-                        value=str(rule.due_date.get("dayOfMonth", 15)),
-                        on_change=_make_due_day_handler(index),
+                        value=FormEditState.get_due_day(index),
+                        on_change=lambda val: FormEditState.update_due_day(index, val),
                         min=1,
                         max=31,
                     ),
@@ -112,8 +70,8 @@ def _make_extension_day_handler(index: int):
                     "Months After Year End",
                     rx.input(
                         type="number",
-                        value=str(rule.extension_due_date.get("monthsAfterCalculationBase", 0)),
-                        on_change=_make_extension_months_handler(index),
+                        value=FormEditState.get_extension_months(index),
+                        on_change=lambda val: FormEditState.update_extension_months(index, val),
                         min=0,
                         max=24,
                     ),
@@ -122,8 +80,8 @@ def _make_extension_day_handler(index: int):
                     "Day of Month",
                     rx.input(
                         type="number",
-                        value=str(rule.extension_due_date.get("dayOfMonth", 15)),
-                        on_change=_make_extension_day_handler(index),
+                        value=FormEditState.get_extension_day(index),
+                        on_change=lambda val: FormEditState.update_extension_day(index, val),
                         min=1,
                         max=31,
                     ),

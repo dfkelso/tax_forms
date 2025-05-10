@@ -2,6 +2,7 @@
 import reflex as rx
 
 from ..backend.table_state import TaxForm, TableState
+from ..backend.form_edit_state import FormEditState
 
 def _header_cell(text: str, icon: str) -> rx.Component:
     return rx.table.column_header_cell(
@@ -25,18 +26,14 @@ def _show_item(item: TaxForm, index: int) -> rx.Component:
         rx.color("accent", 3),
     )
     
-    # Use rx.cond for conditional styling
-    approximated_style = {"color": rx.color("amber", 9)}
-    normal_style = {}
-    
     return rx.table.row(
         rx.table.row_header_cell(
             rx.link(
                 item.form_number,
-                href=f"/forms/{item.id}/edit",
+                on_click=lambda: FormEditState.open_edit_modal(item.id),
                 color=rx.color("blue", 9),
                 text_decoration="none",
-                _hover={"text_decoration": "underline"},
+                _hover={"text_decoration": "underline", "cursor": "pointer"},
             )
         ),
         rx.table.cell(item.form_name),
@@ -44,31 +41,33 @@ def _show_item(item: TaxForm, index: int) -> rx.Component:
         rx.table.cell(item.locality_type.title()),
         rx.table.cell(item.locality),
         rx.table.cell(
-            rx.cond(
-                item.approximated,
-                rx.text(rx.cond(item.due_date, item.due_date, "N/A"), style=approximated_style),
-                rx.text(rx.cond(item.due_date, item.due_date, "N/A"), style=normal_style)
-            )
+            rx.text(rx.cond(item.due_date, item.due_date, "N/A"))
         ),
         rx.table.cell(
-            rx.cond(
-                item.approximated,
-                rx.text(rx.cond(item.extension_due_date, item.extension_due_date, "N/A"), style=approximated_style),
-                rx.text(rx.cond(item.extension_due_date, item.extension_due_date, "N/A"), style=normal_style)
-            )
+            rx.text(rx.cond(item.extension_due_date, item.extension_due_date, "N/A"))
         ),
         rx.table.cell(
             rx.hstack(
-                rx.button(
-                    "Edit", 
-                    on_click=rx.redirect(f"/forms/{item.id}/edit"),
-                    size="1"
+                rx.icon_button(
+                    rx.icon("square-check", size=20),
+                    on_click=lambda: FormEditState.open_edit_modal(item.id),
+                    size="2",
+                    color_scheme="green",
+                    variant="soft",
                 ),
-                rx.button(
-                    "Delete", 
+                rx.icon_button(
+                    rx.icon("pencil", size=20),
+                    on_click=lambda: FormEditState.open_edit_modal(item.id),
+                    size="2",
+                    color_scheme="blue",
+                    variant="soft",
+                ),
+                rx.icon_button(
+                    rx.icon("trash", size=20),
                     on_click=lambda: TableState.show_delete_confirmation(item.id),
-                    size="1", 
-                    color_scheme="red"
+                    size="2",
+                    color_scheme="red",
+                    variant="soft",
                 ),
                 spacing="2",
             )
