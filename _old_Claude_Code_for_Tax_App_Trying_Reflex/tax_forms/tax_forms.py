@@ -1,4 +1,4 @@
-# tax_forms/tax_forms.py
+# tax_forms/tax_forms.py - REPLACE THE ENTIRE FILE
 import reflex as rx
 from tax_forms import styles
 
