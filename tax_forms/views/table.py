@@ -1,8 +1,7 @@
-# reflex_app/views/table.py
+# tax_forms/views/table.py
 import reflex as rx
 
 from ..backend.table_state import TaxForm, TableState
-
 
 def _header_cell(text: str, icon: str) -> rx.Component:
     return rx.table.column_header_cell(
@@ -13,7 +12,6 @@ def _header_cell(text: str, icon: str) -> rx.Component:
             spacing="2",
         ),
     )
-
 
 def _show_item(item: TaxForm, index: int) -> rx.Component:
     bg_color = rx.cond(
@@ -26,15 +24,52 @@ def _show_item(item: TaxForm, index: int) -> rx.Component:
         rx.color("gray", 3),
         rx.color("accent", 3),
     )
+    
+    # Use rx.cond for conditional styling
+    approximated_style = {"color": rx.color("amber", 9)}
+    normal_style = {}
+    
     return rx.table.row(
-        rx.table.row_header_cell(item.form_number),
+        rx.table.row_header_cell(
+            rx.link(
+                item.form_number,
+                href=f"/forms/{item.id}/edit",
+                color=rx.color("blue", 9),
+                text_decoration="none",
+                _hover={"text_decoration": "underline"},
+            )
+        ),
         rx.table.cell(item.form_name),
-        rx.table.cell(item.entity_type),
-        rx.table.cell(f"{item.locality_type} - {item.locality}"),
+        rx.table.cell(item.entity_type.title()),
+        rx.table.cell(item.locality_type.title()),
+        rx.table.cell(item.locality),
+        rx.table.cell(
+            rx.cond(
+                item.approximated,
+                rx.text(rx.cond(item.due_date, item.due_date, "N/A"), style=approximated_style),
+                rx.text(rx.cond(item.due_date, item.due_date, "N/A"), style=normal_style)
+            )
+        ),
+        rx.table.cell(
+            rx.cond(
+                item.approximated,
+                rx.text(rx.cond(item.extension_due_date, item.extension_due_date, "N/A"), style=approximated_style),
+                rx.text(rx.cond(item.extension_due_date, item.extension_due_date, "N/A"), style=normal_style)
+            )
+        ),
         rx.table.cell(
             rx.hstack(
-                rx.button("Edit", on_click=rx.redirect(f"/forms/{item.id}/edit"), size="1"),
-                rx.button("Delete", size="1", color_scheme="red"),
+                rx.button(
+                    "Edit", 
+                    on_click=rx.redirect(f"/forms/{item.id}/edit"),
+                    size="1"
+                ),
+                rx.button(
+                    "Delete", 
+                    on_click=lambda: TableState.show_delete_confirmation(item.id),
+                    size="1", 
+                    color_scheme="red"
+                ),
                 spacing="2",
             )
         ),
@@ -42,6 +77,30 @@ def _show_item(item: TaxForm, index: int) -> rx.Component:
         align="center",
     )
 
+def delete_modal() -> rx.Component:
+    return rx.alert_dialog.root(
+        rx.alert_dialog.content(
+            rx.alert_dialog.title("Confirm Delete"),
+            rx.alert_dialog.description(
+                "Are you sure you want to delete this form? This action cannot be undone."
+            ),
+            rx.flex(
+                rx.alert_dialog.cancel(
+                    rx.button("Cancel", variant="soft", color_scheme="gray"),
+                ),
+                rx.alert_dialog.action(
+                    rx.button(
+                        "Delete",
+                        color_scheme="red",
+                        on_click=TableState.confirm_delete,
+                    ),
+                ),
+                spacing="3",
+                justify="end",
+            ),
+        ),
+        open=TableState.show_delete_modal,
+    )
 
 def _pagination_view() -> rx.Component:
     return (
@@ -105,7 +164,6 @@ def _pagination_view() -> rx.Component:
         ),
     )
 
-
 def main_table() -> rx.Component:
     return rx.box(
         rx.flex(
@@ -163,13 +221,23 @@ def main_table() -> rx.Component:
                 justify="end",
                 spacing="3",
             ),
-            rx.button(
-                rx.icon("plus", size=20),
-                "Add Form",
-                size="3",
-                variant="surface",
-                display=["none", "none", "none", "flex"],
-                on_click=rx.redirect("/forms/new"),
+            rx.hstack(
+                rx.text("Preview Year: "),
+                rx.input(
+                    type="number",
+                    value=TableState.preview_year,
+                    on_change=TableState.set_preview_year,
+                    width="100px",
+                    size="2",
+                ),
+                rx.button(
+                    rx.icon("plus", size=20),
+                    "Add Form",
+                    size="3",
+                    variant="surface",
+                    on_click=rx.redirect("/forms/new"),
+                ),
+                spacing="3",
             ),
             spacing="3",
             justify="between",
@@ -183,7 +251,10 @@ def main_table() -> rx.Component:
                     _header_cell("Form Number", "file-text"),
                     _header_cell("Form Name", "text"),
                     _header_cell("Entity Type", "users"),
+                    _header_cell("Locality Type", "map"),
                     _header_cell("Locality", "map-pin"),
+                    _header_cell("Due Date", "calendar"),
+                    _header_cell("Extension Due Date", "calendar-plus"),
                     _header_cell("Actions", "settings"),
                 ),
             ),
@@ -198,5 +269,6 @@ def main_table() -> rx.Component:
             width="100%",
         ),
         _pagination_view(),
+        delete_modal(),
         width="100%",
     )
