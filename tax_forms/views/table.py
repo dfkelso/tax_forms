@@ -33,7 +33,7 @@ def _show_item(item: TaxForm, index: int) -> rx.Component:
         rx.table.cell(f"{item.locality_type} - {item.locality}"),
         rx.table.cell(
             rx.hstack(
-                rx.button("Edit", on_click=rx.navigate(f"/forms/{item.id}/edit"), size="1"),
+                rx.button("Edit", on_click=rx.redirect(f"/forms/{item.id}/edit"), size="1"),
                 rx.button("Delete", size="1", color_scheme="red"),
                 spacing="2",
             )
@@ -169,7 +169,7 @@ def main_table() -> rx.Component:
                 size="3",
                 variant="surface",
                 display=["none", "none", "none", "flex"],
-                on_click=rx.navigate("/forms/new"),
+                on_click=rx.redirect("/forms/new"),
             ),
             spacing="3",
             justify="between",

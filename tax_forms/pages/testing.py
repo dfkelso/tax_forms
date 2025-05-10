@@ -1,31 +1,12 @@
-"""The testing page."""
-
+# tax_forms/pages/testing.py
 import reflex as rx
-
-from ..templates import template
-
-
-class TestingState(rx.State):
-    """State for testing due dates."""
-    entity_type: str = "individual"
-    start_date: str = ""
-    end_date: str = ""
-    job_created: bool = False
-    
-    def create_job(self):
-        """Create a test job."""
-        self.job_created = True
-
+from tax_forms.state.testing_state import TestingState
+from tax_forms.templates import template
 
 @template(route="/testing", title="Testing")
-def testing() -> rx.Component:
-    """The testing page.
-
-    Returns:
-        The UI for the testing page.
-    """
+def testing_page():
     return rx.vstack(
-        rx.heading("Test Due Dates", size="5"),
+        rx.heading("Test Due Dates", size="lg"),
         rx.card(
             rx.vstack(
                 rx.text("Create a test job to verify due date calculations."),
@@ -74,13 +55,76 @@ def testing() -> rx.Component:
         rx.cond(
             TestingState.job_created,
             rx.vstack(
-                rx.heading("Job Created", size="md"),
-                rx.text("In a future update, you'll see available forms here."),
+                rx.heading("Available Forms", size="md"),
+                rx.text("Select forms to add to your test job:"),
+                rx.table(
+                    rx.thead(
+                        rx.tr(
+                            rx.th("Form Number"),
+                            rx.th("Form Name"),
+                            rx.th("Locality"),
+                            rx.th("Actions"),
+                        )
+                    ),
+                    rx.tbody(
+                        rx.foreach(
+                            TestingState.available_forms.to(list),
+                            lambda form, i: rx.tr(
+                                rx.td(form.form_number),
+                                rx.td(form.form_name),
+                                rx.td(f"{form.locality_type} - {form.locality}"),
+                                rx.td(
+                                    rx.button(
+                                        "Add to Job",
+                                        on_click=TestingState.add_form_to_job(form.id),
+                                        size="sm",
+                                    )
+                                ),
+                            )
+                        )
+                    ),
+                    width="100%",
+                ),
+                rx.cond(
+                    TestingState.forms_added,
+                    rx.vstack(
+                        rx.heading("Calculated Due Dates", size="md"),
+                        rx.table(
+                            rx.thead(
+                                rx.tr(
+                                    rx.th("Form Number"),
+                                    rx.th("Form Name"),
+                                    rx.th("Due Date"),
+                                    rx.th("Extension Due Date"),
+                                )
+                            ),
+                            rx.tbody(
+                                rx.foreach(
+                                    TestingState.due_dates.to(list),
+                                    lambda date_info, i: rx.tr(
+                                        rx.td(date_info.form_number),
+                                        rx.td(date_info.form_name),
+                                        rx.td(date_info.due_date),
+                                        rx.td(date_info.extension_due_date),
+                                    )
+                                )
+                            ),
+                            width="100%",
+                        ),
+                        rx.button(
+                            "Clear Results", 
+                            on_click=TestingState.clear_results,
+                            color_scheme="red",
+                        ),
+                        width="100%",
+                        spacing="4",
+                    ),
+                ),
                 width="100%",
-                spacing="4",
+                spacing="6",
                 mt="6",
             ),
         ),
-        spacing="8",
         width="100%",
+        spacing="6",
     )

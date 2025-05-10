@@ -16,7 +16,7 @@ class FormNewState(rx.State):
     def create_form(self):
         """Create a new form."""
         # For now, just navigate back to the forms list
-        return rx.navigate("/forms")
+        return rx.redirect("/forms")
 
 
 @template(route="/forms/new", title="New Form")
@@ -84,7 +84,7 @@ def form_new() -> rx.Component:
                     ),
                     rx.hstack(
                         rx.button("Create Form", type="submit"),
-                        rx.button("Cancel", on_click=rx.navigate("/forms"), color_scheme="gray", variant="soft"),
+                        rx.button("Cancel", on_click=rx.redirect("/forms"), color_scheme="gray", variant="soft"),
                         justify="end",
                         width="100%",
                     ),
