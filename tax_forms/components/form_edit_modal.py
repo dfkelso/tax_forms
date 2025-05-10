@@ -1,6 +1,6 @@
 # tax_forms/components/form_edit_modal.py
 import reflex as rx
-from ..backend.form_edit_state import FormEditState
+from ..backend.form_edit_state import FormEditState, CalculationRule
 
 
 def form_field(label: str, field_component: rx.Component) -> rx.Component:
@@ -13,7 +13,52 @@ def form_field(label: str, field_component: rx.Component) -> rx.Component:
     )
 
 
-def calculation_rule_item(rule: dict, index: int) -> rx.Component:
+def _format_years(rule: CalculationRule) -> str:
+    """Helper to format effective years as string."""
+    return rx.cond(
+        rule.effective_years.length() > 0,
+        rx.Var.create(rule.effective_years).to(str).join(", "),
+        ""
+    )
+
+
+def _get_due_months(rule: CalculationRule) -> str:
+    """Helper to get due months value."""
+    return rx.cond(
+        rule.due_date.get("monthsAfterCalculationBase"),
+        rule.due_date.get("monthsAfterCalculationBase").to(str),
+        "0"
+    )
+
+
+def _get_due_day(rule: CalculationRule) -> str:
+    """Helper to get due day value."""
+    return rx.cond(
+        rule.due_date.get("dayOfMonth"),
+        rule.due_date.get("dayOfMonth").to(str),
+        "15"
+    )
+
+
+def _get_extension_months(rule: CalculationRule) -> str:
+    """Helper to get extension months value."""
+    return rx.cond(
+        rule.extension_due_date.get("monthsAfterCalculationBase"),
+        rule.extension_due_date.get("monthsAfterCalculationBase").to(str),
+        "0"
+    )
+
+
+def _get_extension_day(rule: CalculationRule) -> str:
+    """Helper to get extension day value."""
+    return rx.cond(
+        rule.extension_due_date.get("dayOfMonth"),
+        rule.extension_due_date.get("dayOfMonth").to(str),
+        "15"
+    )
+
+
+def calculation_rule_item(rule: CalculationRule, index: int) -> rx.Component:
     """Single calculation rule component."""
     return rx.card(
         rx.vstack(
@@ -28,15 +73,17 @@ def calculation_rule_item(rule: dict, index: int) -> rx.Component:
                 ),
                 width="100%",
             ),
+            
             # Effective Years
             form_field(
                 "Effective Years (comma separated)",
                 rx.input(
-                    value=FormEditState.get_effective_years_string(index),
-                    on_change=lambda val: FormEditState.update_rule_years(index, val),
+                    value=_format_years(rule),
+                    on_change=FormEditState.update_rule_years(index),
                     placeholder="e.g. 2023, 2024, 2025",
                 ),
             ),
+            
             # Due Date
             rx.heading("Due Date", size="2", margin_top="1em"),
             rx.hstack(
@@ -44,8 +91,8 @@ def calculation_rule_item(rule: dict, index: int) -> rx.Component:
                     "Months After Year End",
                     rx.input(
                         type="number",
-                        value=FormEditState.get_due_months(index),
-                        on_change=lambda val: FormEditState.update_due_months(index, val),
+                        value=_get_due_months(rule),
+                        on_change=FormEditState.update_due_months(index),
                         min=0,
                         max=24,
                     ),
@@ -54,8 +101,8 @@ def calculation_rule_item(rule: dict, index: int) -> rx.Component:
                     "Day of Month",
                     rx.input(
                         type="number",
-                        value=FormEditState.get_due_day(index),
-                        on_change=lambda val: FormEditState.update_due_day(index, val),
+                        value=_get_due_day(rule),
+                        on_change=FormEditState.update_due_day(index),
                         min=1,
                         max=31,
                     ),
@@ -63,6 +110,7 @@ def calculation_rule_item(rule: dict, index: int) -> rx.Component:
                 spacing="4",
                 width="100%",
             ),
+            
             # Extension Due Date
             rx.heading("Extension Due Date", size="2", margin_top="1em"),
             rx.hstack(
@@ -70,8 +118,8 @@ def calculation_rule_item(rule: dict, index: int) -> rx.Component:
                     "Months After Year End",
                     rx.input(
                         type="number",
-                        value=FormEditState.get_extension_months(index),
-                        on_change=lambda val: FormEditState.update_extension_months(index, val),
+                        value=_get_extension_months(rule),
+                        on_change=FormEditState.update_extension_months(index),
                         min=0,
                         max=24,
                     ),
@@ -80,8 +128,8 @@ def calculation_rule_item(rule: dict, index: int) -> rx.Component:
                     "Day of Month",
                     rx.input(
                         type="number",
-                        value=FormEditState.get_extension_day(index),
-                        on_change=lambda val: FormEditState.update_extension_day(index, val),
+                        value=_get_extension_day(rule),
+                        on_change=FormEditState.update_extension_day(index),
                         min=1,
                         max=31,
                     ),
@@ -136,6 +184,7 @@ def form_edit_modal() -> rx.Component:
                         rx.tabs.trigger("Basic Info", value="basic"),
                         rx.tabs.trigger("Calculation Rules", value="rules"),
                     ),
+                    
                     # Basic Info Tab
                     rx.tabs.content(
                         rx.scroll_area(
@@ -316,7 +365,7 @@ def form_edit_modal() -> rx.Component:
                                 rx.vstack(
                                     rx.foreach(
                                         FormEditState.calculation_rules,
-                                        lambda rule, index: calculation_rule_item(rule, index),
+                                        calculation_rule_item,
                                     ),
                                     spacing="3",
                                     width="100%",

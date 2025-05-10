@@ -2,9 +2,15 @@
 import json
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-from datetime import datetime
 
 import reflex as rx
+
+
+class CalculationRule(rx.Base):
+    """Model for calculation rules."""
+    effective_years: List[int] = []
+    due_date: Dict[str, Any] = {}
+    extension_due_date: Dict[str, Any] = {}
 
 
 class FormEditState(rx.State):
@@ -31,7 +37,7 @@ class FormEditState(rx.State):
     piggyback_fed: bool = False
     
     # Calculation rules
-    calculation_rules: List[Dict[str, Any]] = []
+    calculation_rules: List[CalculationRule] = []
     
     # Available options
     entity_types: List[str] = ["individual", "corporation", "partnership", "scorp", "smllc"]
@@ -77,8 +83,16 @@ class FormEditState(rx.State):
                     self.extension_form_name = extension.get("formName", "")
                     self.piggyback_fed = extension.get("piggybackFed", False)
                     
-                    # Load calculation rules
-                    self.calculation_rules = form.get("calculationRules", [])
+                    # Load calculation rules properly
+                    rules = form.get("calculationRules", [])
+                    self.calculation_rules = []
+                    for rule in rules:
+                        calc_rule = CalculationRule(
+                            effective_years=rule.get("effectiveYears", []),
+                            due_date=rule.get("dueDate", {}),
+                            extension_due_date=rule.get("extensionDueDate", {})
+                        )
+                        self.calculation_rules.append(calc_rule)
                     
                     # Get available parent forms
                     self.parent_forms = [
@@ -100,19 +114,28 @@ class FormEditState(rx.State):
         # Validate required fields
         if not self.form_number or not self.form_name:
             self.error_message = "Form number and name are required."
-            return
+            return rx.toast.error("Form number and name are required.")
         
         # Load current data
         json_path = Path("assets/forms.json")
         if not json_path.exists():
             self.error_message = "Forms data file not found."
-            return
+            return rx.toast.error("Forms data file not found.")
         
         with open(json_path, 'r') as f:
             data = json.load(f)
             forms = data.get("forms", [])
         
         if 0 <= self.edit_form_id - 1 < len(forms):
+            # Convert CalculationRule objects back to dicts
+            rules_data = []
+            for rule in self.calculation_rules:
+                rules_data.append({
+                    "effectiveYears": rule.effective_years,
+                    "dueDate": rule.due_date,
+                    "extensionDueDate": rule.extension_due_date
+                })
+            
             # Update form data
             form = {
                 "formNumber": self.form_number,
@@ -123,7 +146,7 @@ class FormEditState(rx.State):
                 "parentFormNumbers": [self.form_number] if self.is_parent_form else ([self.parent_form_number] if self.parent_form_number else []),
                 "owner": self.owner,
                 "calculationBase": self.calculation_base,
-                "calculationRules": self.calculation_rules
+                "calculationRules": rules_data
             }
             
             # Add extension if provided
@@ -137,105 +160,88 @@ class FormEditState(rx.State):
             # Update form in array
             forms[self.edit_form_id - 1] = form
             
-            # For this demo, we'll just update in memory
-            # In a real app, you would save to the JSON file
-            # with open(json_path, 'w') as f:
-            #     json.dump(data, f, indent=2)
+            # Save to JSON file
+            with open(json_path, 'w') as f:
+                json.dump(data, f, indent=2)
             
             # Close modal and refresh table
             self.show_edit_modal = False
             
-            # Trigger table reload by updating the parent state
-            yield rx.call_script("window.location.reload()")
+            # Trigger table reload
+            return rx.toast.success("Form saved successfully!", position="top-right")
     
     # Rule management methods
     def add_calculation_rule(self):
         """Add a new empty calculation rule."""
-        new_rule = {
-            "effectiveYears": [],
-            "dueDate": {
+        new_rule = CalculationRule(
+            effective_years=[],
+            due_date={
                 "monthsAfterCalculationBase": 0,
                 "dayOfMonth": 15
             },
-            "extensionDueDate": {
+            extension_due_date={
                 "monthsAfterCalculationBase": 0,
                 "dayOfMonth": 15
             }
-        }
+        )
         self.calculation_rules.append(new_rule)
     
     def delete_rule(self, index: int):
         """Delete a calculation rule."""
-        if 0 <= index < len(self.calculation_rules):
-            self.calculation_rules.pop(index)
+        def _delete():
+            if 0 <= index < len(self.calculation_rules):
+                self.calculation_rules.pop(index)
+        
+        return _delete
     
+    # Update methods for calculation rules
     def update_rule_years(self, index: int, years_str: str):
         """Update effective years for a rule."""
-        if 0 <= index < len(self.calculation_rules):
-            try:
-                years = [int(y.strip()) for y in years_str.split(",") if y.strip()]
-                self.calculation_rules[index]["effectiveYears"] = years
-            except ValueError:
-    # Getter methods for calculation rules (needed for Reflex vars)
-    def get_effective_years_string(self, index: int) -> str:
-        """Get effective years as comma-separated string."""
-        if 0 <= index < len(self.calculation_rules):
-            years = self.calculation_rules[index].get("effectiveYears", [])
-            return ",".join(map(str, years))
-        return ""
-    
-    def get_due_months(self, index: int) -> str:
-        """Get due date months."""
-        if 0 <= index < len(self.calculation_rules):
-            return str(self.calculation_rules[index].get("dueDate", {}).get("monthsAfterCalculationBase", 0))
-        return "0"
-    
-    def get_due_day(self, index: int) -> str:
-        """Get due date day."""
-        if 0 <= index < len(self.calculation_rules):
-            return str(self.calculation_rules[index].get("dueDate", {}).get("dayOfMonth", 15))
-        return "15"
-    
-    def get_extension_months(self, index: int) -> str:
-        """Get extension due date months."""
-        if 0 <= index < len(self.calculation_rules):
-            return str(self.calculation_rules[index].get("extensionDueDate", {}).get("monthsAfterCalculationBase", 0))
-        return "0"
-    
-    def get_extension_day(self, index: int) -> str:
-        """Get extension due date day."""
-        if 0 <= index < len(self.calculation_rules):
-            return str(self.calculation_rules[index].get("extensionDueDate", {}).get("dayOfMonth", 15))
-        return "15"
+        def _update():
+            if 0 <= index < len(self.calculation_rules):
+                try:
+                    years = [int(y.strip()) for y in years_str.split(",") if y.strip()]
+                    self.calculation_rules[index].effective_years = years
+                except ValueError:
+                    pass
+        return _update
     
     def update_due_months(self, index: int, months: str):
         """Update due date months for a rule."""
-        if 0 <= index < len(self.calculation_rules):
-            try:
-                self.calculation_rules[index]["dueDate"]["monthsAfterCalculationBase"] = int(months)
-            except ValueError:
-                pass
+        def _update():
+            if 0 <= index < len(self.calculation_rules):
+                try:
+                    self.calculation_rules[index].due_date["monthsAfterCalculationBase"] = int(months)
+                except ValueError:
+                    pass
+        return _update
     
     def update_due_day(self, index: int, day: str):
         """Update due date day for a rule."""
-        if 0 <= index < len(self.calculation_rules):
-            try:
-                self.calculation_rules[index]["dueDate"]["dayOfMonth"] = int(day)
-            except ValueError:
-                pass
+        def _update():
+            if 0 <= index < len(self.calculation_rules):
+                try:
+                    self.calculation_rules[index].due_date["dayOfMonth"] = int(day)
+                except ValueError:
+                    pass
+        return _update
     
     def update_extension_months(self, index: int, months: str):
         """Update extension due date months for a rule."""
-        if 0 <= index < len(self.calculation_rules):
-            try:
-                self.calculation_rules[index]["extensionDueDate"]["monthsAfterCalculationBase"] = int(months)
-            except ValueError:
-                pass
+        def _update():
+            if 0 <= index < len(self.calculation_rules):
+                try:
+                    self.calculation_rules[index].extension_due_date["monthsAfterCalculationBase"] = int(months)
+                except ValueError:
+                    pass
+        return _update
     
     def update_extension_day(self, index: int, day: str):
         """Update extension due date day for a rule."""
-        if 0 <= index < len(self.calculation_rules):
-            try:
-                self.calculation_rules[index]["extensionDueDate"]["dayOfMonth"] = int(day)
-            except ValueError:
-                pass
+        def _update():
+            if 0 <= index < len(self.calculation_rules):
+                try:
+                    self.calculation_rules[index].extension_due_date["dayOfMonth"] = int(day)
+                except ValueError:
+                    pass
+        return _update

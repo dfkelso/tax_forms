@@ -3,13 +3,13 @@
     {
       "formNumber": "1040",
       "formName": "U.S. Individual Income Tax Return",
+      "entityType": "individual",
       "localityType": "federal",
       "locality": "United States",
-      "entityType": "individual",
       "parentFormNumbers": [
         "1040"
       ],
-      "owner": "MPM",
+      "owner": "nothing",
       "calculationBase": "end",
       "calculationRules": [
         {
@@ -1037,12 +1037,10 @@
     {
       "formNumber": "990",
       "formName": "Return of Organization Exempt From Income Tax",
+      "entityType": "corporation",
       "localityType": "federal",
       "locality": "United States",
-      "entityType": "corporation",
-      "parentFormNumbers": [
-        ""
-      ],
+      "parentFormNumbers": [],
       "owner": "MPM",
       "calculationBase": "end",
       "calculationRules": [
