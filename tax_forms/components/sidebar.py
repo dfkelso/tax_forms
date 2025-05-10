@@ -119,7 +119,6 @@ def sidebar() -> rx.Component:
             rx.vstack(
                 # Simplified navigation with just Forms, Testing, Settings
                 sidebar_item("Forms", "/forms"),
-                sidebar_item("Testing", "/testing"),
                 sidebar_item("Settings", "/settings"),
                 spacing="1",
                 width="100%",

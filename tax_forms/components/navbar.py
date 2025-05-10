@@ -121,7 +121,6 @@ def menu_button() -> rx.Component:
                     rx.divider(),
                     # Simplified navigation for mobile
                     menu_item("Forms", "/forms"),
-                    menu_item("Testing", "/testing"),
                     menu_item("Settings", "/settings"),
                     rx.spacer(),
                     navbar_footer(),

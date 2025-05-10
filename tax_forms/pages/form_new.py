@@ -32,8 +32,8 @@ def form_new() -> rx.Component:
             rx.form(
                 rx.vstack(
                     rx.hstack(
-                        rx.form_control(
-                            rx.form_label("Form Number"),
+                        rx.form.field(
+                            rx.form.label("Form Number"),
                             rx.input(
                                 value=FormNewState.form_number,
                                 on_change=FormNewState.set_form_number,
@@ -41,8 +41,8 @@ def form_new() -> rx.Component:
                             ),
                             is_required=True,
                         ),
-                        rx.form_control(
-                            rx.form_label("Form Name"),
+                        rx.form.field(
+                            rx.form.label("Form Name"),
                             rx.input(
                                 value=FormNewState.form_name,
                                 on_change=FormNewState.set_form_name,
@@ -53,8 +53,8 @@ def form_new() -> rx.Component:
                         width="100%",
                     ),
                     rx.hstack(
-                        rx.form_control(
-                            rx.form_label("Entity Type"),
+                        rx.form.field(
+                            rx.form.label("Entity Type"),
                             rx.select(
                                 ["individual", "corporation", "partnership", "scorp", "smllc"],
                                 value=FormNewState.entity_type,
@@ -62,8 +62,8 @@ def form_new() -> rx.Component:
                             ),
                             is_required=True,
                         ),
-                        rx.form_control(
-                            rx.form_label("Locality Type"),
+                        rx.form.field(
+                            rx.form.label("Locality Type"),
                             rx.select(
                                 ["federal", "state", "city"],
                                 value=FormNewState.locality_type,
@@ -71,8 +71,8 @@ def form_new() -> rx.Component:
                             ),
                             is_required=True,
                         ),
-                        rx.form_control(
-                            rx.form_label("Locality"),
+                        rx.form.field(
+                            rx.form.label("Locality"),
                             rx.input(
                                 value=FormNewState.locality,
                                 on_change=FormNewState.set_locality,
