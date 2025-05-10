@@ -187,8 +187,36 @@ def form_edit_modal() -> rx.Component:
                     
                     # Basic Info Tab
                     rx.tabs.content(
+                        rx.divider(),
                         rx.scroll_area(
+                            
                             rx.vstack(
+                                rx.spacer(),
+                                rx.form(
+                                    rx.vstack(
+                                        rx.hstack(
+                                            rx.text.strong("Form Number:", size="2"),
+                                            rx.input(
+                                                value=FormEditState.form_number,
+                                                on_change=FormEditState.set_form_number,
+                                                placeholder="e.g. 1040",    
+                                                name="Form Number",
+                                                required=True,                                       
+                                            ), 
+                                            rx.spacer(spacing="5"),
+                                            rx.text.strong("Form Name:", size="2"),
+                                            rx.input(
+                                                value=FormEditState.form_name,
+                                                on_change=FormEditState.set_form_name,
+                                                placeholder="e.g. U.S. Individual Income Tax Return",
+                                                required=True,                                       
+                                            ),
+                                            align="center"
+                                        ),
+                                    ),
+                                ),
+                                rx.spacer(),
+                                rx.divider(),
                                 # Form Number and Name row
                                 rx.hstack(
                                     form_field(
@@ -351,7 +379,7 @@ def form_edit_modal() -> rx.Component:
                     rx.tabs.content(
                         rx.vstack(
                             rx.hstack(
-                                rx.heading("Calculation Rules", size="4"),
+                                # rx.heading("Calculation Rules", size="4"),
                                 rx.spacer(),
                                 rx.button(
                                     rx.icon("plus", size=16),

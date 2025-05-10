@@ -17,12 +17,12 @@ def table() -> rx.Component:
 
     """
     return rx.vstack(
-        rx.hstack(
-            rx.heading("Tax Forms", size="5"),
-            rx.spacer(),
-            rx.button("Add Form", on_click=rx.redirect("/forms/new")),
-            width="100%",
-        ),
+        # rx.hstack(
+        #     rx.heading("Tax Forms", size="5"),
+        #     rx.spacer(),
+        #     rx.button("Add Form", on_click=rx.redirect("/forms/new")),
+        #     width="100%",
+        # ),
         main_table(),
         form_edit_modal(),  # Add the modal here
         spacing="8",

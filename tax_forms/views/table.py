@@ -49,13 +49,6 @@ def _show_item(item: TaxForm, index: int) -> rx.Component:
         rx.table.cell(
             rx.hstack(
                 rx.icon_button(
-                    rx.icon("square-check", size=20),
-                    on_click=lambda: FormEditState.open_edit_modal(item.id),
-                    size="2",
-                    color_scheme="green",
-                    variant="soft",
-                ),
-                rx.icon_button(
                     rx.icon("pencil", size=20),
                     on_click=lambda: FormEditState.open_edit_modal(item.id),
                     size="2",
@@ -85,7 +78,12 @@ def delete_modal() -> rx.Component:
             ),
             rx.flex(
                 rx.alert_dialog.cancel(
-                    rx.button("Cancel", variant="soft", color_scheme="gray"),
+                    rx.button(
+                        "Cancel", 
+                        variant="soft", 
+                        color_scheme="gray",
+                        on_click=TableState.hide_delete_modal,
+                    ),
                 ),
                 rx.alert_dialog.action(
                     rx.button(
@@ -99,6 +97,7 @@ def delete_modal() -> rx.Component:
             ),
         ),
         open=TableState.show_delete_modal,
+        on_open_change=lambda state: TableState.setvar("show_delete_modal", state),
     )
 
 def _pagination_view() -> rx.Component:
@@ -221,13 +220,14 @@ def main_table() -> rx.Component:
                 spacing="3",
             ),
             rx.hstack(
-                rx.text("Preview Year: "),
+                rx.text.strong("Preview Year: ", size="3", align="right", as_="div"),
                 rx.input(
                     type="number",
+                    name="Preview Year:",
                     value=TableState.preview_year,
                     on_change=TableState.set_preview_year,
                     width="100px",
-                    size="2",
+                    size="3", 
                 ),
                 rx.button(
                     rx.icon("plus", size=20),
@@ -237,6 +237,7 @@ def main_table() -> rx.Component:
                     on_click=rx.redirect("/forms/new"),
                 ),
                 spacing="3",
+                align="center"
             ),
             spacing="3",
             justify="between",
